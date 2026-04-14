@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BANTAY BAYAN</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;900&family=Rajdhani:wght@300;400;600&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --panel: #15151e;
+    --accent: #00e5ff;
+    --accent2: #f0c040;
+    --accent3: #39ff14;
+    --text: #e8eaf0;
+    --muted: #555570;
+    --border: rgba(0,229,255,0.15);
+    --glow: 0 0 20px rgba(0,229,255,0.4);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 48px;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+
+  .logo {
+    font-family: 'Orbitron', monospace;
+    font-weight: 900;
+    font-size: 1.4rem;
+    letter-spacing: 0.3em;
+    color: var(--accent);
+    text-shadow: var(--glow);
+  }
+
+  .logo span { color: var(--accent2); }
+
+  .tag {
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .badge {
+    padding: 6px 16px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    box-shadow: var(--glow);
+  }
+
+  .main {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 60px;
+    gap: 48px;
+  }
+
+  .headline {
+    text-align: center;
+  }
+
+  .headline h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(1.6rem, 4vw, 3rem);
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    line-height: 1.1;
+  }
+
+  .headline h1 em {
+    color: var(--accent);
+    font-style: normal;
+    text-shadow: var(--glow);
+  }
+
+  .headline p {
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* 3D Viewer */
+  .viewer-wrap {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .scene-container {
+    width: 100%;
+    height: 420px;
+    perspective: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    user-select: none;
+  }
+
+  .scene-container:active { cursor: grabbing; }
+
+  .scene {
+    transform-style: preserve-3d;
+    transition: transform 0.05s linear;
+  }
+
+  /* The ID card 3D model — proportional to real dims:
+     Real: 9.1cm wide, 6.4cm tall → ratio ~1.42:1
+     We render at 320px wide, 225px tall */
+  .id-card {
+    width: 320px;
+    height: 225px;
+    transform-style: preserve-3d;
+    position: relative;
+  }
+
+  .face {
+    position: absolute;
+    inset: 0;
+    border-radius: 18px;
+    backface-visibility: hidden;
+  }
+
+  /* FRONT FACE */
+  .face-front {
+    background: linear-gradient(145deg, #1a1a2e 0%, #0d0d1a 60%, #1a1a2e 100%);
+    border: 1.5px solid rgba(255, 42, 42, 0.87);
+    box-shadow:
+      0 0 30px rgba(0,229,255,0.2),
+      inset 0 1px 0 rgba(25x5,255,255,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    overflow: hidden;
+    transform: translateZ(8px);
+  }
+
+  .face-front::before {
+    content: '';
+    position: absolute;
+    top: -40%;
+    left: -20%;
+    width: 60%;
+    height: 60%;
+    background: radial-gradient(ellipse, rgba(255, 255, 255, 0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* Screen area — proportional: 8.4cm wide, 5.1cm tall
+     relative to card 9.1cm × 6.4cm → 92% wide, 80% tall */
+  .screen-area {
+    width: 88%;
+    height: 80%;
+    border-radius: 10px;
+    background: #000;
+    border: 1.5px solid rgb(202, 57, 57);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 16px rgb(251, 102, 102) inset;
+  }
+
+  /* Animated map on screen */
+  .map-canvas {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  .map-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.08) 1px, transparent 1px);
+    background-size: 16px 16px;
+  }
+
+  .map-block {
+    position: absolute;
+    border: 1px solid rgba(47, 104, 111, 0.995);
+    border-radius: 3px;
+    background: rgba(0,229,255,0.04);
+  }
+
+  .map-route {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+  }
+
+  .pulse-dot {
+    position: absolute;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 12px var(--accent3);
+    animation: pulse 1.5s infinite;
+  }
+
+  .pulse-dot.you {
+    background: var(--accent2);
+    box-shadow: 0 0 12px var(--accent2);
+    animation: pulse 1.5s infinite 0.4s;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.5); opacity: 0.6; }
+  }
+
+  .label-me, .label-you {
+    position: absolute;
+    font-family: 'Orbitron', monospace;
+    font-size: 7px;
+    font-weight: 600;
+    padding: 2px 5px;
+    border-radius: 2px;
+  }
+
+  .label-me {
+    background: var(--accent3);
+    color: #000;
+    bottom: 20%;
+    left: 10%;
+  }
+
+  .label-you {
+    background: var(--accent2);
+    color: #000;
+    top: 25%;
+    right: 12%;
+  }
+
+  .scan-line {
+    position: absolute;
+    left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(0,229,255,0.6), transparent);
+    animation: scan 3s linear infinite;
+  }
+
+  @keyframes scan {
+    0% { top: 0%; }
+    100% { top: 100%; }
+  }
+
+  .screen-glare {
+    position: absolute;
+    top: -10%;
+    left: -10%;
+    width: 50%;
+    height: 50%;
+    background: radial-gradient(ellipse, rgba(255,255,255,0.04), transparent 70%);
+    pointer-events: none;
+    border-radius: 50%;
+  }
+
+  /* BACK FACE */
+  .face-back {
+    background: linear-gradient(145deg, #141420 0%, #0f0f1c 100%);
+    border: 1.5px solid rgba(255,255,255,0.08);
+    transform: rotateY(180deg) translateZ(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  .back-grid {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 4px;
+    padding: 12px;
+    opacity: 0.5;
+  }
+
+  .back-block {
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    background: rgb(249, 104, 104);
+  }
+
+  .back-label {
+    position: relative;
+    z-index: 2;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* SIDE faces */
+  .face-right {
+    width: 16px;
+    height: 225px;
+    background: linear-gradient(180deg, #1e1e30, #0d0d1a);
+    border-top: 1.5px solid rgba(0,229,255,0.15);
+    border-bottom: 1.5px solid rgba(0,229,255,0.15);
+    position: absolute;
+    top: 0;
+    left: 320px;
+    transform: rotateY(90deg);
+    transform-origin: left center;
+    border-radius: 0 10px 10px 0;
+  }
+
+  .face-left {
+    width: 16px;
+    height: 225px;
+    background: linear-gradient(180deg, #1e1e30, #0d0d1a);
+    position: absolute;
+    top: 0;
+    right: 320px;
+    transform: rotateY(-90deg);
+    transform-origin: right center;
+    border-radius: 10px 0 0 10px;
+  }
+
+  /* Lanyard hole */
+  .lanyard-hole {
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #000;
+    border: 1.5px solid rgba(0,229,255,0.3);
+    z-index: 10;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .ctrl-btn {
+    padding: 10px 22px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .ctrl-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: var(--glow);
+    background: rgba(0,229,255,0.04);
+  }
+
+  .ctrl-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0,229,255,0.08);
+  }
+
+  .hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  /* Specs panel */
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1px;
+    width: 100%;
+    max-width: 700px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .spec-item {
+    background: var(--panel);
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .spec-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .spec-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(0,229,255,0.3);
+  }
+
+  .spec-unit {
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  /* Feature tags */
+  .features {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .feat-tag {
+    padding: 6px 14px;
+    border: 1px solid rgba(240,192,64,0.25);
+    color: var(--accent2);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 600;
+  }
+
+  /* Rotation indicator arc */
+  .rotate-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+  }
+
+  .rotate-arc {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--muted);
+    border-right-color: var(--accent);
+    border-radius: 50%;
+    animation: spin-slow 3s linear infinite;
+  }
+
+  @keyframes spin-slow {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Auto-rotate animation */
+  .auto-rotating .scene {
+    animation: auto-rotate 8s linear infinite;
+  }
+
+  @keyframes auto-rotate {
+    from { transform: rotateX(-15deg) rotateY(0deg); }
+    to { transform: rotateX(-15deg) rotateY(360deg); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+</header>
+
+<main class="main">
+
+  <div class="headline">
+    
+  </div>
+
+  <div class="viewer-wrap">
+    <div class="scene-container" id="sceneContainer">
+      <div class="scene" id="scene">
+        <div class="id-card" id="idCard">
+
+          <!-- FRONT FACE -->
+          <div class="face face-front">
+            <div class="lanyard-hole"></div>
+            <div class="screen-area">
+              <div class="map-canvas">
+                <div class="map-grid"></div>
+                <!-- Map blocks -->
+                <div class="map-block" style="left:8%;top:10%;width:22%;height:18%;"></div>
+                <div class="map-block" style="left:36%;top:10%;width:20%;height:18%;"></div>
+                <div class="map-block" style="left:62%;top:10%;width:25%;height:18%;"></div>
+                <div class="map-block" style="left:8%;top:38%;width:32%;height:18%;"></div>
+                <div class="map-block" style="left:8%;top:65%;width:20%;height:20%;"></div>
+                <div class="map-block" style="left:62%;top:55%;width:25%;height:18%;"></div>
+                <svg class="map-route" viewBox="0 0 280 180" xmlns="http://www.w3.org/2000/svg">
+                  <defs>
+                    <filter id="glow">
+                      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+                    </filter>
+                  </defs>
+                  <!-- Route path -->
+                  <path d="M 240 30 L 190 30 L 190 85 L 90 85 L 90 130 L 45 130 L 45 155"
+                    stroke="#f0c040" stroke-width="2.5" fill="none" stroke-dasharray="6 3"
+                    filter="url(#glow)" opacity="0.9">
+                    <animate attributeName="stroke-dashoffset" from="0" to="-18" dur="1.2s" repeatCount="indefinite"/>
+                  </path>
+                </svg>
+                <!-- ME dot (bottom left area) -->
+                <div class="pulse-dot" style="bottom:18%;left:12%;"></div>
+                <!-- YOU dot (top right area) -->
+                <div class="pulse-dot you" style="top:20%;right:10%;"></div>
+                <div class="label-me">ME</div>
+                <div class="label-you">YOU</div>
+                <div class="scan-line"></div>
+                <div class="screen-glare"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BACK FACE -->
+          <div class="face face-back">
+            <div class="back-grid">
+              <div class="back-block"></div><div class="back-block"></div><div class="back-block"></div>
+              <div class="back-block"></div><div class="back-block"></div><div class="back-block"></div>
+              <div class="back-block"></div><div class="back-block"></div><div class="back-block"></div>
+            </div>
+            <div class="back-label">BANTAY BAYAN</div>
+          </div>
+
+          <!-- SIDES -->
+          <div class="face-right"></div>
+          <div class="face-left"></div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl-btn" id="btnFront">Front</button>
+      <button class="ctrl-btn" id="btnBack">Back</button>
+      <button class="ctrl-btn" id="btnSide">Side</button>
+      <button class="ctrl-btn active" id="btnAuto">Auto Rotate</button>
+      <button class="ctrl-btn" id="btnReset">Reset</button>
+    </div>
+
+    <div class="rotate-indicator">
+      <div class="rotate-arc"></div>
+      <span>Drag to orbit · Scroll to zoom</span>
+    </div>
+  </div>
+
+  <!-- Specs -->
+  <div class="specs-grid">
+    <div class="spec-item">
+      <div class="spec-label">Case Length</div>
+      <div class="spec-value">6.4 <span class="spec-unit">cm</span></div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-label">Case Width</div>
+      <div class="spec-value">9.1 <span class="spec-unit">cm</span></div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-label">Screen Width</div>
+      <div class="spec-value">8.4 <span class="spec-unit">cm</span></div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-label">Screen Length</div>
+      <div class="spec-value">5.1 <span class="spec-unit">cm</span></div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-label">Case Depth</div>
+      <div class="spec-value">~0.8 <span class="spec-unit">cm</span></div>
+    </div>
+    <div class="spec-item">
+      <div class="spec-label">Display Type</div>
+      <div class="spec-value" style="font-size:0.9rem;">E-INK</div>
+    </div>
+  </div>
+
+  <div class="features">
+    <div class="feat-tag">Real-Time Location</div>
+    <div class="feat-tag">Proximity Display</div>
+    <div class="feat-tag">Lanyard Ready</div>
+    <div class="feat-tag">Compact Form Factor</div>
+    <div class="feat-tag">Route Mapping</div>
+  </div>
+
+</main>
+
+<script>
+  const container = document.getElementById('sceneContainer');
+  const scene = document.getElementById('scene');
+
+  let rotX = -15, rotY = -30;
+  let scale = 1;
+  let dragging = false, startX, startY, lastRotX, lastRotY;
+  let autoRotate = true;
+  let animFrame;
+  let autoAngle = -30;
+
+  function applyTransform() {
+    scene.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) scale(${scale})`;
+  }
+
+  function tick() {
+    if (autoRotate) {
+      autoAngle += 0.3;
+      rotX = -15;
+      rotY = autoAngle;
+      applyTransform();
+    }
+    animFrame = requestAnimationFrame(tick);
+  }
+  tick();
+
+  // Mouse drag
+  container.addEventListener('mousedown', e => {
+    dragging = true;
+    startX = e.clientX; startY = e.clientY;
+    lastRotX = rotX; lastRotY = rotY;
+    autoRotate = false;
+    document.getElementById('btnAuto').classList.remove('active');
+  });
+
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    rotY = lastRotY + dx * 0.5;
+    rotX = Math.max(-60, Math.min(60, lastRotX - dy * 0.5));
+    applyTransform();
+  });
+
+  window.addEventListener('mouseup', () => { dragging = false; });
+
+  // Touch drag
+  container.addEventListener('touchstart', e => {
+    dragging = true;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    lastRotX = rotX; lastRotY = rotY;
+    autoRotate = false;
+    document.getElementById('btnAuto').classList.remove('active');
+  }, {passive: true});
+
+  window.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+    rotY = lastRotY + dx * 0.5;
+    rotX = Math.max(-60, Math.min(60, lastRotX - dy * 0.5));
+    applyTransform();
+  }, {passive: true});
+
+  window.addEventListener('touchend', () => { dragging = false; });
+
+  // Scroll to zoom
+  container.addEventListener('wheel', e => {
+    e.preventDefault();
+    scale = Math.max(0.5, Math.min(2, scale - e.deltaY * 0.001));
+    applyTransform();
+  }, {passive: false});
+
+  // Preset buttons
+  function setPreset(rx, ry) {
+    autoRotate = false;
+    document.getElementById('btnAuto').classList.remove('active');
+    rotX = rx; rotY = ry;
+    applyTransform();
+  }
+
+  document.getElementById('btnFront').addEventListener('click', () => setPreset(-8, 0));
+  document.getElementById('btnBack').addEventListener('click', () => setPreset(-8, 180));
+  document.getElementById('btnSide').addEventListener('click', () => setPreset(-8, 90));
+  document.getElementById('btnReset').addEventListener('click', () => setPreset(-15, -30));
+
+  document.getElementById('btnAuto').addEventListener('click', function() {
+    autoRotate = !autoRotate;
+    if (autoRotate) {
+      autoAngle = rotY;
+      this.classList.add('active');
+    } else {
+      this.classList.remove('active');
+    }
+  });
+</script>
+</body>
+</html>
